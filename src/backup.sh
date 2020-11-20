@@ -22,13 +22,10 @@ if [ -S "$DOCKER_SOCK" ]; then
   docker ps --format "{{.ID}}" --filter "label=docker-volume-backup.stop-during-backup=true" $CUSTOM_LABEL > "$TEMPFILE"
   CONTAINERS_TO_STOP="$(cat $TEMPFILE | tr '\n' ' ')"
   CONTAINERS_TO_STOP_TOTAL="$(cat $TEMPFILE | wc -l)"
-  CONTAINERS_TOTAL="$(docker ps --format "{{.ID}}" | wc -l)"
   rm "$TEMPFILE"
-  echo "$CONTAINERS_TOTAL containers running on host in total"
   echo "$CONTAINERS_TO_STOP_TOTAL containers marked to be stopped during backup"
 else
   CONTAINERS_TO_STOP_TOTAL="0"
-  CONTAINERS_TOTAL="0"
   echo "Cannot access \"$DOCKER_SOCK\", won't look for containers to stop"
 fi
 
@@ -103,7 +100,7 @@ fi
 info "Collecting metrics"
 TIME_FINISH="$(date +%s.%N)"
 
-CAT <<EOF | curl --data-binary @- $PUSH_GATEWAY
+cat <<EOF | curl --data-binary @- $PUSH_GATEWAY
 dvb_size_compressed_bytes $BACKUP_SIZE
 dvb_containers_stopped $CONTAINERS_TO_STOP_TOTAL
 dvb_time_wall $(perl -E "say $TIME_FINISH - $TIME_START")
