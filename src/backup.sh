@@ -102,29 +102,15 @@ fi
 
 info "Collecting metrics"
 TIME_FINISH="$(date +%s.%N)"
-INFLUX_LINE="$INFLUXDB_MEASUREMENT\
-,host=$BACKUP_HOSTNAME\
-\
- size_compressed_bytes=$BACKUP_SIZE\
-,containers_total=$CONTAINERS_TOTAL\
-,containers_stopped=$CONTAINERS_TO_STOP_TOTAL\
-,time_wall=$(perl -E "say $TIME_FINISH - $TIME_START")\
-,time_total=$(perl -E "say $TIME_FINISH - $TIME_START - $BACKUP_WAIT_SECONDS")\
-,time_compress=$(perl -E "say $TIME_BACKED_UP - $TIME_BACK_UP")\
-,time_upload=$(perl -E "say $TIME_UPLOADED - $TIME_UPLOAD")\
-"
-echo "$INFLUX_LINE" | sed 's/ /,/g' | tr , '\n'
 
-if [ ! -z "$INFLUXDB_URL" ]; then
-  info "Shipping metrics"
-  curl \
-    --silent \
-    --include \
-    --request POST \
-    --user "$INFLUXDB_CREDENTIALS" \
-    "$INFLUXDB_URL/write?db=$INFLUXDB_DB" \
-    --data-binary "$INFLUX_LINE"
-fi
+CAT <<EOF | curl --data-binary @- $PUSH_GATEWAY
+dvb_size_compressed_bytes $BACKUP_SIZE
+dvb_containers_stopped $CONTAINERS_TO_STOP_TOTAL
+dvb_time_wall $(perl -E "say $TIME_FINISH - $TIME_START")
+dvb_time_total $(perl -E "say $TIME_FINISH - $TIME_START - $BACKUP_WAIT_SECONDS")
+dvb_time_compress $(perl -E "say $TIME_BACKED_UP - $TIME_BACK_UP")
+dvb_time_upload $(perl -E "say $TIME_UPLOADED - $TIME_UPLOAD")
+EOF
 
 info "Backup finished"
 echo "Will wait for next scheduled backup"
