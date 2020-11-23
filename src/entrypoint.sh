@@ -1,7 +1,8 @@
 #!/bin/bash
 set -eo pipefail
 
-env | grep -E "^(BACKUP_|AWS_|TZ)" | sort > env.sh
+env | grep -E "^(BACKUP|AWS|TZ)" | sed 's/^\([A-Z0-9_]\+=\)/\1\"/;s/$/\"/' > env.sh
+chmod +x env.sh
 
 # Add our cron entry, and direct stdout & stderr to Docker commands stdout
 echo "Installing cron.d entry: docker-volume-backup"
