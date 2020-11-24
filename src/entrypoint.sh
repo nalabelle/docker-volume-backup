@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eo pipefail
 
-env | grep -E "^(BACKUP|AWS|TZ)" | sed 's/^\([A-Z0-9_]\+=\)/\1\"/;s/$/\"/' > env.sh
+env | grep -E "^(BACKUP|AWS|TZ)" | sed 's/^\([A-Z0-9_]\+=\)/\1\"/;s/$/\"/;s/^/export /' > env.sh
 chmod +x env.sh
 
 # Add our cron entry, and direct stdout & stderr to Docker commands stdout
